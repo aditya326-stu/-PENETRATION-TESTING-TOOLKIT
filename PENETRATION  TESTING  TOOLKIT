@@ -1,0 +1,103 @@
+import socket
+import requests
+import itertools
+import threading
+
+# ------------------ MODULE 1: Port Scanner ------------------
+def port_scanner(target, ports=[21, 22, 80, 443, 3306]):
+    print(f"\n[+] Scanning ports on {target}...")
+    for port in ports:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
+        try:
+            s.connect((target, port))
+            print(f"[OPEN] Port {port} is open on {target}")
+        except:
+            pass
+        finally:
+            s.close()
+
+
+# ------------------ MODULE 2: Directory Brute-Forcer ------------------
+def dir_bruteforce(target_url, wordlist=["admin", "login", "dashboard", "config"]):
+    print(f"\n[+] Starting directory brute force on {target_url}")
+    for word in wordlist:
+        url = f"{target_url}/{word}"
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                print(f"[FOUND] {url}")
+        except requests.exceptions.RequestException:
+            pass
+
+
+# ------------------ MODULE 3: Login Brute-Forcer ------------------
+def login_bruteforce(target_url, username, password_list=["1234", "admin", "password"]):
+    print(f"\n[+] Starting brute force on login form: {target_url}")
+    for pwd in password_list:
+        data = {"username": username, "password": pwd}
+        try:
+            r = requests.post(target_url, data=data)
+            if "Welcome" in r.text or r.status_code == 200:
+                print(f"[SUCCESS] Password found: {pwd}")
+                return
+        except requests.exceptions.RequestException:
+            pass
+    print("[FAILED] No valid password found in wordlist.")
+
+
+# ------------------ MODULE 4: Subdomain Enumerator ------------------
+def subdomain_enum(domain, subdomains=["www", "mail", "ftp", "test"]):
+    print(f"\n[+] Starting subdomain enumeration for {domain}")
+    for sub in subdomains:
+        try:
+            subdomain = f"{sub}.{domain}"
+            socket.gethostbyname(subdomain)
+            print(f"[FOUND] Subdomain: {subdomain}")
+        except:
+            pass
+
+
+# ------------------ MAIN TOOLKIT MENU ------------------
+def main():
+    print("""
+    ===============================
+      Penetration Testing Toolkit
+    ===============================
+    1. Port Scanner
+    2. Directory Brute-Forcer
+    3. Login Brute-Forcer
+    4. Subdomain Enumerator
+    5. Exit
+    """)
+
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        target = input("Enter target IP: ")
+        port_scanner(target)
+
+    elif choice == "2":
+        url = input("Enter target URL (e.g., http://example.com): ")
+        dir_bruteforce(url)
+
+    elif choice == "3":
+        url = input("Enter login URL (e.g., http://example.com/login): ")
+        user = input("Enter username: ")
+        login_bruteforce(url, user)
+
+    elif choice == "4":
+        domain = input("Enter domain (e.g., example.com): ")
+        subdomain_enum(domain)
+
+    elif choice == "5":
+        print("Exiting toolkit...")
+        exit()
+
+    else:
+        print("Invalid choice. Try again.")
+
+
+if __name__ == "__main__":
+    while True:
+        main()
